@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soundtrap — The Game</title>
+<meta property="og:title" content="Soundtrap — The Game">
+<meta property="og:description" content="A pixel adventure: the origin story of Soundtrap. Password required.">
+<meta property="og:image" content="cover.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%8E%B9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=VT323&display=swap">
+<style>
+  :root{ --ink:#f4ead2; --amber:#f2b134; --amber-dk:#7a3d00; --panel:#1a0f2e; --line:#4a2c72; }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:radial-gradient(1100px 700px at 50% 20%, #34195f 0%, #1a0d34 55%, #0c0518 100%);
+    color:var(--ink); font-family:"VT323",ui-monospace,monospace;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:20px; padding-block:26px;
+  }
+  .card{ width:100%; max-width:600px; background:var(--panel);
+    border:3px solid var(--line); border-radius:18px; overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.6); }
+  .cover{ display:block; width:100%; height:auto; max-height:72vh; object-fit:contain; background:#0c0518; }
+  .bar{ padding:16px 18px 18px; background:linear-gradient(180deg,#22143a,#160c28); }
+  form{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  input[type=password]{ flex:1 1 240px; min-width:0; font-family:"VT323",monospace; font-size:26px;
+    color:#fff; background:#100a1e; border:2px solid var(--line); border-radius:10px;
+    padding:12px 16px; letter-spacing:3px; text-align:center; }
+  input[type=password]::placeholder{ color:#7a6aa0; letter-spacing:2px; }
+  input[type=password]:focus{ outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(242,177,52,.28); }
+  button{ font-family:"Luckiest Guy",cursive; font-size:24px; color:#3a1c00; letter-spacing:1px;
+    background:linear-gradient(180deg,#ffd873,#f2b134); border:none; border-radius:10px;
+    padding:8px 26px; cursor:pointer; box-shadow:0 5px 0 var(--amber-dk); }
+  button:active{ transform:translateY(2px); box-shadow:0 3px 0 var(--amber-dk); }
+  button:disabled{ opacity:.6; cursor:progress; }
+  .msg{ min-height:22px; text-align:center; font-size:21px; margin-top:12px; letter-spacing:.5px; }
+  .msg.err{ color:#ff8b82; }
+  .msg.ok{ color:#7fe0a6; }
+  .hint{ text-align:center; font-size:16px; color:#8f7cb6; margin:12px 4px 2px; line-height:1.5; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <img class="cover" src="cover.jpg" alt="Soundtrap — The Game">
+    <div class="bar">
+      <form id="f" autocomplete="off">
+        <input id="pw" type="password" placeholder="ENTER PASSWORD" autofocus aria-label="Password">
+        <button id="go" type="submit">PLAY</button>
+      </form>
+      <div class="msg" id="msg" role="status">Enter the password to start the game.</div>
+    </div>
+  </main>
+  <p class="hint" style="position:fixed;bottom:10px;left:0;right:0">Encrypted &amp; unlocked in your browser — nothing is stored or sent anywhere.</p>
+
+<script>
+/* ---- encrypted payload (baked in by build.js) ---- */
+const SALT="%%SALT%%", IV="%%IV%%", CT="%%CT%%", ITER=%%ITER%%;
+
+function b64d(s){ const bin=atob(s); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+
+async function decrypt(pw){
+  const enc=new TextEncoder();
+  const keyMat=await crypto.subtle.importKey('raw', enc.encode(pw), {name:'PBKDF2'}, false, ['deriveKey']);
+  const key=await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:b64d(SALT), iterations:ITER, hash:'SHA-256'},
+    keyMat, {name:'AES-GCM', length:256}, false, ['decrypt']);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64d(IV)}, key, b64d(CT));
+  return new TextDecoder().decode(plain);
+}
+
+const f=document.getElementById('f'), pw=document.getElementById('pw'),
+      go=document.getElementById('go'), msg=document.getElementById('msg');
+
+f.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const p=pw.value;
+  if(!p){ pw.focus(); return; }
+  go.disabled=true; msg.className='msg'; msg.textContent='Unlocking…';
+  try{
+    const html=await decrypt(p);
+    msg.className='msg ok'; msg.textContent='Welcome. Loading…';
+    setTimeout(()=>{ document.open(); document.write(html); document.close(); }, 220);
+  }catch(err){
+    go.disabled=false; msg.className='msg err'; msg.textContent='Wrong password — try again.';
+    pw.select();
+  }
+});
+</script>
+</body>
+</html>

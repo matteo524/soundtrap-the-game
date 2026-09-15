@@ -1,0 +1,6 @@
+# Keep the plaintext game PRIVATE — it must never be published.
+# Only the encrypted index.html + cover.png go to GitHub.
+game.html
+
+node_modules/
+.DS_Store
