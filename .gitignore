@@ -4,3 +4,6 @@ game.html
 
 node_modules/
 .DS_Store
+
+# Private handover notes (contains the password) — keep local
+HANDOVER.md
