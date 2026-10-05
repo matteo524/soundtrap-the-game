@@ -7,3 +7,9 @@ node_modules/
 
 # Private handover notes (contains the password) — keep local
 HANDOVER.md
+
+# Private source photos (real people) — embedded only in the encrypted build
+private-assets/
+
+# Local Claude preview config
+.claude/
